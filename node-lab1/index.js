@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+// eslint-disable-next-line no-undef
 const port = process.env.PORT;
 // Configure our HTTP server to respond with Hello World to all requests.
 const server = http.createServer((req, res) => {
