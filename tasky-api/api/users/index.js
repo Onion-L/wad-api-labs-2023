@@ -1,5 +1,12 @@
 import express from "express";
 import User from "./userModel";
+import asyncHandler from "express-async-handler";
+
+const validatePassword = (password) => {
+  const regex =
+    /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+  return regex.test(password);
+};
 
 const router = express.Router(); // eslint-disable-line
 
@@ -10,28 +17,37 @@ router.get("/", async (req, res) => {
 });
 
 // register(Create) User
-router.post("/", async (req, res) => {
-  if (req.query.action === "register") {
-    //if action is 'register' then save to DB
-    await User(req.body).save();
-    res.status(201).json({
-      code: 201,
-      msg: "Successful created new user.",
-    });
-  } else {
-    //Must be an authenticate then!!! Query the DB and check if there's a match
-    const user = await User.findOne(req.body);
-    if (!user) {
-      return res.status(401).json({ code: 401, msg: "Authentication failed" });
+router.post(
+  "/",
+  asyncHandler(async (req, res) => {
+    if (req.query.action === "register") {
+      //if action is 'register' then save to DB
+      if (validatePassword(req.body.password)) {
+        const register = await User(req.body).save();
+        res.status(201).json(register);
+      } else {
+        return res.status(401).json({
+          code: 401,
+          msg: "registration failed:  the password to be at least 8 characters long and contains at least one characters, digit, and special character",
+        });
+      }
     } else {
-      return res.status(200).json({
-        code: 200,
-        msg: "Authentication Successful",
-        token: "TEMPORARY_TOKEN",
-      });
+      //Must be an authenticate then!!! Query the DB and check if there's a match
+      const user = await User.findOne(req.body);
+      if (!user) {
+        return res
+          .status(401)
+          .json({ code: 401, msg: "Authentication failed" });
+      } else {
+        return res.status(200).json({
+          code: 200,
+          msg: "Authentication Successful",
+          token: "TEMPORARY_TOKEN",
+        });
+      }
     }
-  }
-});
+  })
+);
 
 // Update a user
 router.put("/:id", async (req, res) => {
