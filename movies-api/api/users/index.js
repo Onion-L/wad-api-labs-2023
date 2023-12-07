@@ -26,6 +26,13 @@ router.post(
         return res
           .status(400)
           .json({ success: false, msg: "Username and password are required." });
+      } else if (validatePassword(req.body.password)) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            msg: "Password does not meet the requirements",
+          });
       }
       if (req.query.action === "register") {
         await registerUser(req, res);
